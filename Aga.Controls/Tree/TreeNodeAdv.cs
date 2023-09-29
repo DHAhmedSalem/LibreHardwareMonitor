@@ -244,18 +244,20 @@ namespace Aga.Controls.Tree
 		{
 			get
 			{
-                if (_parent != null && _parent.Nodes != null)
+                if (_parent != null)
                 {
                     int index = Index;
+					if (index >= _parent.Nodes.Count - 1) {
+						return null;
+					}
+
                     try
                     {
-                        TreeNodeAdv[] list = _parent.Nodes.ToArray();
-                        if (index < list.Length - 1)
-                            return list[index + 1];
+                        return _parent.Nodes[index + 1];
                     }
                     catch (Exception ex)
                     {
-                        string path = @"c:\Scripts0\LHM.txt";
+                        string path = @"c:\Scripts\LHM.txt";
                         if (!File.Exists(path) && Directory.Exists(Directory.GetParent(path).FullName))
                         {
                             using (StreamWriter sw = File.CreateText(path))
