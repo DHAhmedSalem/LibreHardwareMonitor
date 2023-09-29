@@ -1,6 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
@@ -243,13 +244,37 @@ namespace Aga.Controls.Tree
 		{
 			get
 			{
-				if (_parent != null)
-				{
-					int index = Index;
-					if (index < _parent.Nodes.Count - 1)
-						return _parent.Nodes[index + 1];
-				}
-				return null;
+                if (_parent != null && _parent.Nodes != null)
+                {
+                    int index = Index;
+                    try
+                    {
+                        TreeNodeAdv[] list = _parent.Nodes.ToArray();
+                        if (index < list.Length - 1)
+                            return list[index + 1];
+                    }
+                    catch (Exception ex)
+                    {
+                        string path = @"c:\Scripts0\LHM.txt";
+                        if (!File.Exists(path) && Directory.Exists(Directory.GetParent(path).FullName))
+                        {
+                            using (StreamWriter sw = File.CreateText(path))
+                            {
+                                sw.WriteLine("LHM Log");
+                            }
+                        }
+
+                        if (File.Exists(path))
+                        {
+                            using (StreamWriter sw = File.AppendText(path))
+                            {
+                                sw.WriteLine("[{0}]: Exception index violation (probably) {1} - {2}.", DateTime.Now.ToString(), index.ToString(), ex.ToString());
+                            }
+                        }
+
+                    }
+                }
+                return null;
 			}
 		}
 
