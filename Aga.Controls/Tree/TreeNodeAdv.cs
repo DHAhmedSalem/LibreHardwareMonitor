@@ -1,12 +1,15 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Drawing.Text;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
 namespace Aga.Controls.Tree
 {
+
 	[Serializable]
 	public sealed class TreeNodeAdv : ISerializable
 	{
@@ -230,12 +233,18 @@ namespace Aga.Controls.Tree
 		{
 			get
 			{
-				if (_parent != null)
-				{
-					int index = Index;
-					if (index > 0)
-						return _parent.Nodes[index - 1];
-				}
+                try
+                {
+                    if (_parent != null)
+                    {
+                        int index = Index;
+                        if (index > 0)
+                            return _parent.Nodes[index - 1];
+                    }
+                } catch (Exception ex)
+                {
+                    HotfixLogger.error(String.Format("[{0}]: (PreviousNode) Exception index violation (probably) {1} - {2}.", DateTime.Now.ToString(), Index.ToString(), ex.ToString()));
+                }
 				return null;
 			}
 		}
@@ -257,23 +266,7 @@ namespace Aga.Controls.Tree
                     }
                     catch (Exception ex)
                     {
-                        string path = @"c:\Scripts\LHM.txt";
-                        if (!File.Exists(path) && Directory.Exists(Directory.GetParent(path).FullName))
-                        {
-                            using (StreamWriter sw = File.CreateText(path))
-                            {
-                                sw.WriteLine("LHM Log");
-                            }
-                        }
-
-                        if (File.Exists(path))
-                        {
-                            using (StreamWriter sw = File.AppendText(path))
-                            {
-                                sw.WriteLine("[{0}]: Exception index violation (probably) {1} - {2}.", DateTime.Now.ToString(), index.ToString(), ex.ToString());
-                            }
-                        }
-
+                        HotfixLogger.error(String.Format("[{0}]: (NextNode) Exception index violation (probably) {1} - {2}.", DateTime.Now.ToString(), index.ToString(), ex.ToString()));
                     }
                 }
                 return null;
@@ -300,17 +293,27 @@ namespace Aga.Controls.Tree
 		{
 			get
 			{
-				if (IsExpanded && Nodes.Count > 0)
-					return Nodes[0];
-				else
-				{
-					TreeNodeAdv nn = NextNode;
-					if (nn != null)
-						return nn;
-					else
-						return BottomNode;
-				}
-			}
+                try
+                {
+                    if (IsExpanded && Nodes.Count > 0)
+                        return Nodes[0];
+                    else
+                    {
+                        TreeNodeAdv nn = NextNode;
+                        if (nn != null)
+                            return nn;
+                        else
+                            return BottomNode;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    int index = 0;
+                    HotfixLogger.error(String.Format("[{0}]: (NextVisibleNode) Exception index violation (probably) {1} - {2}.", DateTime.Now.ToString(), index.ToString(), ex.ToString()));
+                    return BottomNode;
+                }
+
+            }
 		}
 
 		public bool CanExpand
@@ -467,4 +470,28 @@ namespace Aga.Controls.Tree
 
 		#endregion
 	}
+}
+
+
+class HotfixLogger
+{
+    public static void error(String msg)
+    {
+        string path = @"c:\Scripts\LHM.txt";
+        if (!File.Exists(path) && Directory.Exists(Directory.GetParent(path).FullName))
+        {
+            using (StreamWriter sw = File.CreateText(path))
+            {
+                sw.WriteLine("LHM Log");
+            }
+        }
+
+        if (File.Exists(path))
+        {
+            using (StreamWriter sw = File.AppendText(path))
+            {
+                sw.WriteLine(msg);
+            }
+        }
+    }
 }
