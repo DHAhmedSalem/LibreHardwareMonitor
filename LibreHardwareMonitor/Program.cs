@@ -6,8 +6,10 @@
 
 using System;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Windows.Forms;
 using LibreHardwareMonitor.UI;
+using OxyPlot;
 
 namespace LibreHardwareMonitor;
 
@@ -19,16 +21,35 @@ public static class Program
         if (!AllRequiredFilesAvailable())
             Environment.Exit(0);
 
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(handleException);
+        AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(handleException);
+
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        using (MainForm form = new MainForm())
+        try
         {
-            form.FormClosed += delegate
+            using (MainForm form = new MainForm())
             {
-                Application.Exit();
-            };
-            Application.Run();
+                form.FormClosed += delegate
+                {
+                    Application.Exit();
+                };
+
+                
+                Application.Run();
+            }
+        } catch (Exception ex)
+        {
+            string msg = String.Format("[{0}]: Uncaught exception in the Main method: {0}", DateTime.Now.ToString(), ex.Message);
+            HotfixLogger.error(msg);
         }
+    }
+
+    private static void handleException(object sender, EventArgs e)
+    {
+        string msg = String.Format("Exception Encountered: \nObject: {1}\nException {2}", sender.ToString(), e.ToString());
+        Console.WriteLine(msg);
     }
 
     private static bool IsFileAvailable(string fileName)
