@@ -42,14 +42,14 @@ public static class Program
             }
         } catch (Exception ex)
         {
-            string msg = String.Format("[{0}]: Uncaught exception in the Main method: {0}", DateTime.Now.ToString(), ex.Message);
+            string msg = String.Format("(Main) - {0}", ex.Message);
             HotfixLogger.error(msg);
         }
     }
 
     private static void handleException(object sender, EventArgs e)
     {
-        string msg = String.Format("Exception Encountered: \nObject: {1}\nException {2}", sender.ToString(), e.ToString());
+        string msg = String.Format("Exception Encountered: Object: {0}. Exception {1}", sender.ToString(), e.ToString());
         Console.WriteLine(msg);
     }
 
@@ -58,9 +58,9 @@ public static class Program
         string path = Path.GetDirectoryName(Application.ExecutablePath) + Path.DirectorySeparatorChar;
         if (!File.Exists(path + fileName))
         {
-            MessageBox.Show("The following file could not be found: " + fileName +
-                            "\nPlease extract all files from the archive.", "Error",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //MessageBox.Show("The following file could not be found: " + fileName +
+            //                "\nPlease extract all files from the archive.", "Error",
+            //                MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
         }
         return true;

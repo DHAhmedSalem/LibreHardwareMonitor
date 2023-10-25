@@ -243,7 +243,7 @@ namespace Aga.Controls.Tree
                     }
                 } catch (Exception ex)
                 {
-                    HotfixLogger.error(String.Format("[{0}]: (PreviousNode) Exception index violation (probably) {1} - {2}.", DateTime.Now.ToString(), Index.ToString(), ex.ToString()));
+                    HotfixLogger.error(String.Format("(PreviousNode) Index {0} - {1}.", Index.ToString(), ex.Message));
                 }
 				return null;
 			}
@@ -266,7 +266,7 @@ namespace Aga.Controls.Tree
                     }
                     catch (Exception ex)
                     {
-                        HotfixLogger.error(String.Format("[{0}]: (NextNode) Exception index violation (probably) {1} - {2}.", DateTime.Now.ToString(), index.ToString(), ex.ToString()));
+                        HotfixLogger.error(String.Format("(NextNode) Index {0} - {1}.", index.ToString(), ex.Message));
                     }
                 }
                 return null;
@@ -309,7 +309,7 @@ namespace Aga.Controls.Tree
                 catch (Exception ex)
                 {
                     int index = 0;
-                    HotfixLogger.error(String.Format("[{0}]: (NextVisibleNode) Exception index violation (probably) {1} - {2}.", DateTime.Now.ToString(), index.ToString(), ex.ToString()));
+                    HotfixLogger.error(String.Format("(NextVisibleNode) Index {0} - {1}.", index.ToString(), ex.Message));
                     return BottomNode;
                 }
 
@@ -490,7 +490,7 @@ class HotfixLogger
         {
             using (StreamWriter sw = File.AppendText(path))
             {
-                sw.WriteLine(msg);
+                sw.WriteLine(String.Format("[{0}] - {1}", DateTime.Now.ToString(), msg));
             }
         }
     }

@@ -18,7 +18,7 @@ class HotfixLogger
         {
             using (StreamWriter sw = File.AppendText(path))
             {
-                sw.WriteLine(msg);
+                sw.WriteLine(String.Format("[{0}] - {1}", DateTime.Now.ToString(), msg));
             }
         }
     }
