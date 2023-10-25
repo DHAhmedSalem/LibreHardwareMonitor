@@ -18,17 +18,18 @@ public static class Program
     [STAThread]
     public static void Main()
     {
-        if (!AllRequiredFilesAvailable())
-            Environment.Exit(0);
-
-        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-        Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(handleException);
-        AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(handleException);
-
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
         try
         {
+            if (!AllRequiredFilesAvailable())
+            Environment.Exit(0);
+
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += new System.Threading.ThreadExceptionEventHandler(handleException);
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(handleException);
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+      
             using (MainForm form = new MainForm())
             {
                 form.FormClosed += delegate
