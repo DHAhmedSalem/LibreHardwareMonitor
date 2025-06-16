@@ -177,17 +177,18 @@ public sealed partial class MainForm : Form
         UserOption showMax = new("maxMenuItem", true, maxMenuItem, _settings);
         showMax.Changed += delegate { treeView.Columns[3].IsVisible = showMax.Value; };
 
-        var _ = new UserOption("startMinMenuItem", false, startMinMenuItem, _settings);
-        _minimizeToTray = new UserOption("minTrayMenuItem", true, minTrayMenuItem, _settings);
+        var _ = new UserOption("startMinMenuItem", true, startMinMenuItem, _settings);                     // Start Minimized (Default TRUE for DHS)
+        _minimizeToTray = new UserOption("minTrayMenuItem", true, minTrayMenuItem, _settings);             // Ninimize to Tray (already default)
         _minimizeToTray.Changed += delegate { _systemTray.IsMainIconEnabled = _minimizeToTray.Value; };
 
-        _minimizeOnClose = new UserOption("minCloseMenuItem", false, minCloseMenuItem, _settings);
+        _minimizeOnClose = new UserOption("minCloseMenuItem", true, minCloseMenuItem, _settings);
 
         _autoStart = new UserOption(null, _startupManager.Startup, startupMenuItem, _settings);
         _autoStart.Changed += delegate
         {
             try
             {
+                _autoStart.Value = true;                                                                   // Autostart on system startup (Default TRUE for DHS)
                 _startupManager.Startup = _autoStart.Value;
             }
             catch (InvalidOperationException)
@@ -256,7 +257,7 @@ public sealed partial class MainForm : Form
             webMenuItem.Visible = false;
         }
 
-        _runWebServer = new UserOption("runWebServerMenuItem", false, runWebServerMenuItem, _settings);
+        _runWebServer = new UserOption("runWebServerMenuItem", true, runWebServerMenuItem, _settings);     //  Web Server "Run" (Default TRUE for DHS) 
         _runWebServer.Changed += delegate
         {
             if (_runWebServer.Value)
