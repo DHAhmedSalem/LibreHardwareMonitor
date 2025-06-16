@@ -17,7 +17,7 @@ namespace LibreHardwareMonitor.Hardware.Motherboard.Lpc;
 /// It can be accessed by using memory mapped IO, mapping its internal RAM onto main RAM via the ISA Bridge.
 /// This class can disable it so that the regular IT87XX code can drive the fans.
 /// </summary>
-internal class GigabyteController
+internal class IsaBridgeGigabyteController : IGigabyteController
 {
     private const uint ControllerAddressRange = 0xFF;
     private const int ControllerEnableRegister = 0x47;
@@ -32,7 +32,7 @@ internal class GigabyteController
 
     private bool? _initialState;
 
-    public GigabyteController(uint address, Vendor vendor)
+    public IsaBridgeGigabyteController(uint address, Vendor vendor)
     {
         _controllerBaseAddress = address;
         _vendor = vendor;
@@ -45,12 +45,69 @@ internal class GigabyteController
     /// <returns>true on success</returns>
     public bool Enable(bool enabled)
     {
-        // TODO: Intel
         return _vendor switch
         {
+            Vendor.Intel => IntelEnable(enabled),
             Vendor.AMD => AmdEnable(enabled),
             _ => false
         };
+    }
+
+    private bool IntelEnable(bool enabled)
+    {
+        if (!Mutexes.WaitPciBus(10))
+            return false;
+
+        bool result = false;
+
+        uint intelIsaBridgeAddress = Ring0.GetPciAddress(0x0, 0x1F, 0x0);
+
+        const uint ioOrMemoryPortDecodeEnableRegister = 0xD8;
+        const uint romAddressRange2Register = 0x98;
+
+        uint controllerFanControlAddress = _controllerBaseAddress + ControllerFanControlArea;
+
+        Ring0.ReadPciConfig(intelIsaBridgeAddress, ioOrMemoryPortDecodeEnableRegister, out uint originalDecodeEnableRegister);
+        Ring0.ReadPciConfig(intelIsaBridgeAddress, romAddressRange2Register, out uint originalRomAddressRegister);
+
+        bool originalMmIoEnabled = false;
+        if (!enabled)
+        {
+            originalMmIoEnabled = ((int)originalDecodeEnableRegister & 1) == 0 || ((int)originalRomAddressRegister & 1) == 1;
+        }
+        else
+        {
+            originalMmIoEnabled = ((int)originalDecodeEnableRegister & 1) == 0 && ((int)originalRomAddressRegister & 1) == 1;
+        }
+
+        if (enabled == originalMmIoEnabled)
+        {
+            result = Enable(enabled, new IntPtr(controllerFanControlAddress));
+            Mutexes.ReleasePciBus();
+            return result;
+        }
+
+        uint lpcBiosDecodeEnable;
+        uint lpcMemoryRange;
+        if (enabled)
+        {
+            lpcBiosDecodeEnable = ioOrMemoryPortDecodeEnableRegister & ~(uint)(1 << 0);
+            lpcMemoryRange = romAddressRange2Register | (uint)(1 << 0);
+        }
+        else
+        {
+            lpcBiosDecodeEnable = Convert.ToUInt32(ioOrMemoryPortDecodeEnableRegister | (uint)(1 << 0));
+            lpcMemoryRange = Convert.ToUInt32(romAddressRange2Register & ~(uint)(1 << 0));
+        }
+
+        Ring0.WritePciConfig(intelIsaBridgeAddress, ioOrMemoryPortDecodeEnableRegister, lpcBiosDecodeEnable);
+        Ring0.WritePciConfig(intelIsaBridgeAddress, romAddressRange2Register, lpcMemoryRange);
+
+        result = Enable(enabled, new IntPtr(controllerFanControlAddress));
+
+        Mutexes.ReleasePciBus();
+
+        return result;
     }
 
     private bool AmdEnable(bool enabled)
@@ -58,7 +115,7 @@ internal class GigabyteController
         if (!Mutexes.WaitPciBus(10))
             return false;
 
-        // see D14F3x https://www.amd.com/system/files/TechDocs/55072_AMD_Family_15h_Models_70h-7Fh_BKDG.pdf 
+        // see D14F3x https://www.amd.com/system/files/TechDocs/55072_AMD_Family_15h_Models_70h-7Fh_BKDG.pdf
         uint amdIsaBridgeAddress = Ring0.GetPciAddress(0x0, 0x14, 0x3);
 
         const uint ioOrMemoryPortDecodeEnableRegister = 0x48;
@@ -124,7 +181,7 @@ internal class GigabyteController
         {
             Marshal.WriteByte(mapped, ControllerEnableRegister, Convert.ToByte(enabled));
             // Give it some time to see the change
-            Thread.Sleep(200);
+            Thread.Sleep(500);
         }
 
         InpOut.UnmapMemory(handle, mapped);
