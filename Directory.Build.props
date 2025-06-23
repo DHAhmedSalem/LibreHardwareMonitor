@@ -1,6 +1,11 @@
 <Project>
   <PropertyGroup>
-    <Version>99.9.8.4</Version>
+    <Version>99.9.9</Version>
+    <AssemblyVersion>99.9.9.0</AssemblyVersion>
+    <FileVersion>99.9.9.0</FileVersion>
+    <InformationalVersion>99.9.9</InformationalVersion>
     <Copyright>LibreHardwareMonitor</Copyright>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 </Project>
